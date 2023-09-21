@@ -26,6 +26,13 @@ class Market(object):
         # keep track of the remaining stocks available in the market
         self.shares_in_market = initial_total_shares
 
+        # print the information
+        print(f"================= [{self.name}] ====================")
+        print(f"Initial shares released : {self.initial_total_shares}")
+        print(f"Initial price           : {self.price}")
+        print(f"Number of traders       : {self.num_traders}")
+        print(f"====================== [Done] ===========================\n")
+
     def _determine_price_(self, total_buy: int, total_sell: int,
                           total_supply: int):
         # use my current naive equation to determine the price
@@ -76,8 +83,8 @@ class Market(object):
         # determine price for next step
         print(f"Old price : {self.price}")
         self._determine_price_(total_buy, total_sell, total_supply)
-        print(f"Number of shares available in the market: {self.shares_in_market}")
         print(f"New price : {self.price}")
+        print(f"Number of shares available in the market: {self.shares_in_market}")
 
         return share_allocation
 
@@ -92,20 +99,20 @@ if __name__ == "__main__":
     print(f"Buy  : {b}, Total buy : {np.sum(b)}")
     print(f"Sell : {s}, Total sell: {np.sum(s)}")
     market.execute(b, s)
-    print("-----------------------")
+    print("-------------------------------------")
 
     b = np.array([0, 2, 0])
     s = np.array([3, 0, 4])
     print(f"Buy  : {b}, Total buy : {np.sum(b)}")
     print(f"Sell : {s}, Total sell: {np.sum(s)}")
     market.execute(b, s)
-    print("-----------------------")
+    print("-------------------------------------")
 
     b = np.array([50, 10, 0])
     s = np.array([0, 0, 2])
     print(f"Buy  : {b}, Total buy : {np.sum(b)}")
     print(f"Sell : {s}, Total sell: {np.sum(s)}")
     market.execute(b, s)
-    print("-----------------------")
+    print("-------------------------------------")
 
 
