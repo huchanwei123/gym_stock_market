@@ -48,8 +48,8 @@ class Market(object):
             _avail_shares -= 1
             # if he is satisfied, remove him from list
             if share_allocation[trader_id] == buy_list[trader_id]:
-                trader_ids = trader_ids.delete(trader_ids,
-                                               np.where(trader_ids == trader_id))
+                trader_ids = np.delete(trader_ids,
+                                       np.where(trader_ids == trader_id))
             # if all available shares are given, terminate
             if _avail_shares == 0:
                 break
@@ -72,4 +72,40 @@ class Market(object):
 
         # assign the shares
         share_allocation = self._satisfy_demand_(buy_list, total_buy)
+
+        # determine price for next step
+        print(f"Old price : {self.price}")
+        self._determine_price_(total_buy, total_sell, total_supply)
+        print(f"Number of shares available in the market: {self.shares_in_market}")
+        print(f"New price : {self.price}")
+
         return share_allocation
+
+# Test code
+if __name__ == "__main__":
+    # create a market
+    market = Market()
+
+    # traders buy list and sell list
+    b = np.array([10, 5, 6])
+    s = np.array([0, 0, 0])
+    print(f"Buy  : {b}, Total buy : {np.sum(b)}")
+    print(f"Sell : {s}, Total sell: {np.sum(s)}")
+    market.execute(b, s)
+    print("-----------------------")
+
+    b = np.array([0, 2, 0])
+    s = np.array([3, 0, 4])
+    print(f"Buy  : {b}, Total buy : {np.sum(b)}")
+    print(f"Sell : {s}, Total sell: {np.sum(s)}")
+    market.execute(b, s)
+    print("-----------------------")
+
+    b = np.array([50, 10, 0])
+    s = np.array([0, 0, 2])
+    print(f"Buy  : {b}, Total buy : {np.sum(b)}")
+    print(f"Sell : {s}, Total sell: {np.sum(s)}")
+    market.execute(b, s)
+    print("-----------------------")
+
+
