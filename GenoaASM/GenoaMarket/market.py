@@ -1,6 +1,7 @@
 """Module Containing Market class that controls many agents."""
 
 import pdb
+import matplotlib.pyplot as plt
 from dataclasses import dataclass, field
 from math import floor
 from time import perf_counter
@@ -298,6 +299,16 @@ class Market:
         diffs = demand(X) - supply(X)
         # find the index where the sign changes
         idx = X[(np.argwhere(np.diff(np.sign(diffs))).flatten()) + 1]
+
+
+        # plot the step function
+        plt.step(X, demand(X), label="Demand")
+        plt.step(X, supply(X), label="Supply")
+        plt.legend()
+        plt.xlabel("Price")
+        plt.ylabel("Quantity")
+        plt.title('Demand-Supply curve')
+        plt.show()
 
         # case where a single price is identified
         if idx.shape == (1,):
