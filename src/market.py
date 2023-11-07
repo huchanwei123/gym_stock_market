@@ -6,13 +6,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from typing import List, Dict, Tuple
 
-
+random.seed(0)
 class Market(object):
     """
     A simple market that simulate the stock price based on supply and demand
     from traders
     """
-    def __init__(self, initial_total_shares=100, initial_price=15,
+    def __init__(self, initial_total_shares=10000, initial_price=15,
                  num_traders=3, name="Chan-Wei company"):
         # Initial released shares by current company
         self.initial_total_shares = initial_total_shares
@@ -37,7 +37,10 @@ class Market(object):
                           total_supply: int):
         # use my current naive equation to determine the price
         # new price
-        self.price = self.price * (1 + (total_buy - total_sell) / total_supply)
+        #self.price = self.price * (1 + (total_buy - total_sell) / total_supply)
+        a = 0.1
+        c = 500
+        self.price = self.price * ((1 + (a/c) * (total_buy - total_sell)) ** (1/a))
 
         # update the number of shares available in the market
         self.shares_in_market += total_sell - total_buy
@@ -47,12 +50,15 @@ class Market(object):
         share_allocation = np.zeros(self.num_traders)
         trader_ids = np.arange(self.num_traders)
         _avail_shares = avail_shares
+        if _avail_shares == 0:
+            return share_allocation
 
         while True:
             # pick one trader and allocate a share for him
             trader_id = np.random.choice(trader_ids, 1)[0]
-            share_allocation[trader_id] += 1
-            _avail_shares -= 1
+            if share_allocation[trader_id] < buy_list[trader_id]:
+                share_allocation[trader_id] += 1
+                _avail_shares -= 1
             # if he is satisfied, remove him from list
             if share_allocation[trader_id] == buy_list[trader_id]:
                 trader_ids = np.delete(trader_ids,
@@ -85,8 +91,14 @@ class Market(object):
         self._determine_price_(total_buy, total_sell, total_supply)
         print(f"New price : {self.price}")
         print(f"Number of shares available in the market: {self.shares_in_market}")
-
         return share_allocation
+
+    def pre_distributed(self, num_shares):
+        if num_shares > self.shares_in_market:
+            num_shares = self.shares_in_market
+        self.shares_in_market -= num_shares
+        return num_shares
+
 
 # Test code
 if __name__ == "__main__":
@@ -114,5 +126,3 @@ if __name__ == "__main__":
     print(f"Sell : {s}, Total sell: {np.sum(s)}")
     market.execute(b, s)
     print("-------------------------------------")
-
-

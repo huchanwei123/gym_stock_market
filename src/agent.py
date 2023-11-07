@@ -6,115 +6,60 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from typing import List, Dict, Tuple
 
+class Trader(object):
+    def __init__(self, init_balance, init_shares, trading_strategy="Random"):
+        self.balance = init_balance
 
-class Market(object):
-    """
-    A simple market that simulate the stock price based on supply and demand
-    from traders
-    """
-    def __init__(self, initial_total_shares=100, initial_price=15,
-                 num_traders=3, name="Chan-Wei company"):
-        # Initial released shares by current company
-        self.initial_total_shares = initial_total_shares
-        self.price = initial_price
-        self.num_traders = num_traders
-        self.name = name
+        # record the historical prices
+        self.hist_price = []
 
-        # time step initialization
-        self.timestep = 0
+        # action set definition...
+        # only one share is performed each time
+        self.action_set = {0: "sell",
+                           1: "buy",
+                           2: "do nothing"}
+        self.trading_strategy = trading_strategy
+        self.shares_hold = init_shares
 
-        # keep track of the remaining stocks available in the market
-        self.shares_in_market = initial_total_shares
+    def _trading_strategy_(self, signal=None):
+        # define the trading strategy here...
+        # currently support random, SMA
+        current_price = self.hist_price[-1]
+        if self.trading_strategy == "Random":
+            action = random.randint(0, len(self.action_set)-1)
+        if self.trading_strategy == "SMA":
+            horizon = 30
+            hist = self.hist_price[-horizon:]
+            ma_price = sum(hist) / len(hist)
+            # simple rule
+            if ma_price >= current_price:
+                action = 1
+            else:
+                action = 0
+        # check if the shares or balance are enough...
+        if action == 0 and self.shares_hold <= 0:
+            action = 2
+        if action == 1 and self.balance <= 0:
+            action = 2
 
-        # print the information
-        print(f"================= [{self.name}] ====================")
-        print(f"Initial shares released : {self.initial_total_shares}")
-        print(f"Initial price           : {self.price}")
-        print(f"Number of traders       : {self.num_traders}")
-        print("====================== [Done] ===========================\n")
+        return action
 
-    def _determine_price_(self, total_buy: int, total_sell: int,
-                          total_supply: int):
-        # use my current naive equation to determine the price
-        # new price
-        self.price = self.price * (1 + (total_buy - total_sell) / total_supply)
+    def report_quote(self, current_price):
+        # based on the selected action, just report it for one share
+        sell_amount = 0
+        buy_amount = 0
+        self.hist_price.append(current_price)
+        action = self._trading_strategy_()
+        if self.action_set[action] == "sell" and self.shares_hold > 0:
+            sell_amount = 1
+        if self.action_set[action] == "buy" and self.balance > current_price:
+            buy_amount = 1
+        return sell_amount, buy_amount
 
-        # update the number of shares available in the market
-        self.shares_in_market += total_sell - total_buy
-
-    def _satisfy_demand_(self, buy_list: np.array, avail_shares: int):
-        # allocate shares based on the number of available shares
-        share_allocation = np.zeros(self.num_traders)
-        trader_ids = np.arange(self.num_traders)
-        _avail_shares = avail_shares
-
-        while True:
-            # pick one trader and allocate a share for him
-            trader_id = np.random.choice(trader_ids, 1)[0]
-            share_allocation[trader_id] += 1
-            _avail_shares -= 1
-            # if he is satisfied, remove him from list
-            if share_allocation[trader_id] == buy_list[trader_id]:
-                trader_ids = np.delete(trader_ids,
-                                       np.where(trader_ids == trader_id))
-            # if all available shares are given, terminate
-            if _avail_shares == 0:
-                break
-        return share_allocation
-
-    def execute(self, buy_list: np.array, sell_list: np.array):
-        # sell will always be execute...
-        total_buy = np.sum(buy_list)
-        total_sell = np.sum(sell_list)
-        total_supply = total_sell + self.shares_in_market
-
-        # == check if everything satisfies the constraints ===
-        # when demand is larger than the supply, randomly assign the shares to
-        # traders
-        if total_buy > total_supply:
-            # total_buy is more than total_supply
-            total_buy = total_supply
-        assert (total_supply <= self.initial_total_shares)
-        # ====================================================
-
-        # assign the shares
-        share_allocation = self._satisfy_demand_(buy_list, total_buy)
-
-        # determine price for next step
-        print(f"Old price : {self.price}")
-        self._determine_price_(total_buy, total_sell, total_supply)
-        print(f"New price : {self.price}")
-        print(f"Number of shares available in the market: {self.shares_in_market}")
-
-        return share_allocation
-
-
-"""
-# Test code
-if __name__ == "__main__":
-    # create a market
-    market = Market()
-
-    # traders buy list and sell list
-    b = np.array([10, 5, 6])
-    s = np.array([0, 0, 0])
-    print(f"Buy  : {b}, Total buy : {np.sum(b)}")
-    print(f"Sell : {s}, Total sell: {np.sum(s)}")
-    market.execute(b, s)
-    print("-------------------------------------")
-
-    b = np.array([0, 2, 0])
-    s = np.array([3, 0, 4])
-    print(f"Buy  : {b}, Total buy : {np.sum(b)}")
-    print(f"Sell : {s}, Total sell: {np.sum(s)}")
-    market.execute(b, s)
-    print("-------------------------------------")
-
-    b = np.array([50, 10, 0])
-    s = np.array([0, 0, 2])
-    print(f"Buy  : {b}, Total buy : {np.sum(b)}")
-    print(f"Sell : {s}, Total sell: {np.sum(s)}")
-    market.execute(b, s)
-    print("-------------------------------------")
-"""
-
+    def update_portfolio(self, actual_buy, actual_sell):
+        # For now, we always allow to sell but maybe not allow to buy
+        # It depends on how many shares available...
+        # update the portfolio
+        current_price = self.hist_price[-1]
+        self.shares_hold += actual_buy - actual_sell
+        self.balance += current_price * (actual_sell - actual_buy)
