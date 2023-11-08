@@ -20,6 +20,7 @@ class Trader(object):
                            2: "do nothing"}
         self.trading_strategy = trading_strategy
         self.shares_hold = init_shares
+        self.hist_balance = [init_balance]
 
     def _trading_strategy_(self, signal=None):
         # define the trading strategy here...
@@ -28,7 +29,7 @@ class Trader(object):
         if self.trading_strategy == "Random":
             action = random.randint(0, len(self.action_set)-1)
         if self.trading_strategy == "SMA":
-            horizon = 30
+            horizon = 10
             hist = self.hist_price[-horizon:]
             ma_price = sum(hist) / len(hist)
             # simple rule
@@ -63,3 +64,6 @@ class Trader(object):
         current_price = self.hist_price[-1]
         self.shares_hold += actual_buy - actual_sell
         self.balance += current_price * (actual_sell - actual_buy)
+
+        # record the balance
+        self.hist_balance.append(self.balance)

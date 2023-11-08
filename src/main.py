@@ -8,17 +8,18 @@ from typing import List, Dict, Tuple
 
 from market import Market
 from agent import Trader
-from utils import plot_2D
+from utils import plot_2D, plot_2Ds
 
 
 if __name__ == "__main__":
     # define 10 traders
     num_traders = 100
-    timesteps = 1000
+    timesteps = 10000
     # create a market
     market = Market(num_traders=num_traders)
 
     traders = []
+    random.seed(15)
     for i in range(num_traders):
         #init_balance = random.randint(2000, 10000)
         init_balance = 500
@@ -40,6 +41,8 @@ if __name__ == "__main__":
     # Start the market
     market_done = False
     t = 0
+    sma_balance = []
+    random_balance = []
     while not market_done:
         buy_list = []
         sell_list = []
@@ -57,22 +60,32 @@ if __name__ == "__main__":
         for i in range(num_traders):
             traders[i].update_portfolio(allocations[i], sell_list[i])
             assert (traders[i].balance >= 0)
+            # record the balance
+
 
         # check if the market is terminated
         t += 1
         if t >= timesteps:
             market_done = True
 
-    # check the balance of different types of strategy
-    sma_ = []
-    random_ = []
-    for i in range(num_traders):
-        if traders[i].trading_strategy == "SMA":
-            sma_.append(traders[i].balance)
-        else:
-            random_.append(traders[i].balance)
+        # check the balance of different types of strategy
+        sma_ = []
+        random_ = []
+        for i in range(num_traders):
+            if traders[i].trading_strategy == "SMA":
+                sma_.append(traders[i].balance)
+            else:
+                random_.append(traders[i].balance)
 
-    if len(sma_) > 0:
-        print(f"SMA average balance : {sum(sma_)/len(sma_)}")
-    print(f"Random average balance : {sum(random_)/len(random_)}")
-    plot_2D(np.arange(timesteps), hist_price, ["Price", "time steps", "price"])
+        if len(sma_) > 0:
+            sma_balance.append(sum(sma_)/len(sma_))
+        random_balance.append(sum(random_)/len(random_))
+
+    if len(sma_balance) > 0:
+        print(f"Number of SMA agents: {len(sma_)}")
+        print(f"Final SMA average balance : {sma_balance[-1]}")
+    print(f"Final random average balance : {random_balance[-1]}")
+    plot_2D(np.arange(timesteps), hist_price, [f"Price", "time steps", "price"])
+    plot_2Ds(np.arange(timesteps), [sma_balance, random_balance],
+            ["Balance Comparison", "time steps", "balance"],
+            ["SMA", "Random"])

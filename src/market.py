@@ -38,6 +38,7 @@ class Market(object):
         # use my current naive equation to determine the price
         # new price
         #self.price = self.price * (1 + (total_buy - total_sell) / total_supply)
+        # SDP model
         a = 0.1
         c = 500
         self.price = self.price * ((1 + (a/c) * (total_buy - total_sell)) ** (1/a))
