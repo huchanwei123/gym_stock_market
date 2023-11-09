@@ -12,7 +12,7 @@ class Market(object):
     A simple market that simulate the stock price based on supply and demand
     from traders
     """
-    def __init__(self, initial_total_shares=10000, initial_price=15,
+    def __init__(self, initial_total_shares=5000, initial_price=10,
                  num_traders=3, name="Chan-Wei company"):
         # Initial released shares by current company
         self.initial_total_shares = initial_total_shares

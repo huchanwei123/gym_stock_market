@@ -20,7 +20,11 @@ class Trader(object):
                            2: "do nothing"}
         self.trading_strategy = trading_strategy
         self.shares_hold = init_shares
+        # keep track of action history
+        self.hist_action = []
         self.hist_balance = [init_balance]
+        self.hist_shares_hold = []
+        self.hist_total_balance = []
 
     def _trading_strategy_(self, signal=None):
         # define the trading strategy here...
@@ -29,12 +33,18 @@ class Trader(object):
         if self.trading_strategy == "Random":
             action = random.randint(0, len(self.action_set)-1)
         if self.trading_strategy == "SMA":
-            horizon = 10
-            hist = self.hist_price[-horizon:]
-            ma_price = sum(hist) / len(hist)
+            short_horizon = 10
+            long_horizon = 50
+            short_hist = self.hist_price[-short_horizon:]
+            long_hist = self.hist_price[-long_horizon:]
+            ma_short = sum(short_hist) / len(short_hist)
+            ma_long = sum(long_hist) / len(long_hist)
             # simple rule
-            if ma_price >= current_price:
+            if ma_short > ma_long:
+                # buy
                 action = 1
+            #if ma_price >= current_price:
+            #    action = 0
             else:
                 action = 0
         # check if the shares or balance are enough...
@@ -43,6 +53,7 @@ class Trader(object):
         if action == 1 and self.balance <= 0:
             action = 2
 
+        self.hist_action.append(action)
         return action
 
     def report_quote(self, current_price):
@@ -67,3 +78,5 @@ class Trader(object):
 
         # record the balance
         self.hist_balance.append(self.balance)
+        self.hist_shares_hold.append(self.shares_hold)
+        self.hist_total_balance.append(current_price * self.shares_hold + self.balance)
